@@ -1,6 +1,6 @@
 
 import yaml
-from lib.python_utilities.logutils import *
+from cluster_webapp.lib.python_utilities.logutils import *
 
 
 CONFIG_LOGGING = """
@@ -64,8 +64,6 @@ CONFIG_LOGGING = """
 
 def setup_logging():
     config = yaml.load(CONFIG_LOGGING)
-    for k in ['formatters', 'filters']:
-        eval_class(config, k)
     return config
 
 
