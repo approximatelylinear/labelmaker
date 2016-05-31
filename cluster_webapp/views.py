@@ -3,6 +3,7 @@ import os
 import pdb
 import datetime
 from pprint import pformat
+import logging
 
 import tornado.ioloop
 import tornado.web
@@ -15,6 +16,8 @@ from termcolor import colored
 import models
 import models_metadata
 import conf
+
+LOGGER = logging.getLogger(__name__)
 
 #:  The directory containing this script
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -59,7 +62,7 @@ class ExportHandler(tornado.web.RequestHandler):
                 mongo_db_name=req_data['db_name'],  #   Mongo database name
             )
         except Exception as e:
-            print e
+            LOGGER.exception(e)
             result = {'error': 1, 'msg': repr(e)}
         else:
             result = {'error': 0, 'fname': fname}
@@ -87,7 +90,7 @@ class RowHandler(tornado.web.RequestHandler):
                 idx=idx
             )
         except Exception as e:
-            print e
+            LOGGER.exception(e)
             # pdb.set_trace()
             result = {
                 'error' : 1,
@@ -105,7 +108,7 @@ class ClusterHandler(tornado.web.RequestHandler):
     def post(self, cluster_id=None):
         req_data = tornado.escape.json_decode(self.request.body)
         #   -------------------
-        # print pformat(req_data)
+        LOGGER.debug(pformat(req_data))
         #   -------------------
         table_name = req_data['table_name']         #   table name
         group_path = req_data['group_path']         #   h5 path
@@ -163,7 +166,7 @@ class ClusterDataHandler(tornado.web.RequestHandler):
             models.ClusterTable.load_and_remove_from_id(cluster_id)
         except Exception as e:
             #################
-            print e
+            LOGGER.exception(e)
             #################
             result = {'error': 1}
         else:
@@ -188,7 +191,7 @@ class ClusterDataHandler(tornado.web.RequestHandler):
             )
             updated['tags'] = result
         #   ------------------------------------------------------------
-        print 'Updated tags: {0}'.format(colored(pformat(updated), 'magenta'))
+        LOGGER.info('Updated tags: {0}'.format(colored(pformat(updated), 'magenta')))
         #   ------------------------------------------------------------
         result = json_encode(updated)
         self.set_header("Content-Type", "application/json")
@@ -198,144 +201,6 @@ class ClusterDataHandler(tornado.web.RequestHandler):
 
 class RawDataHandler(tornado.web.RequestHandler):
     base_path = os.path.join(THIS_DIR, 'data', 'raw')
-    # db_names = {
-    #     'Rock the Ranch'            : ['pm_comments_rtr', models.PMClusterDataFrame],
-    #     'All PM Comments'           : ['pm_web_comments', models.PMClusterDataFrame],
-    #     'PM Comments (RATED)'       : ['pm_web_comments_rated', models.PMClusterDataFrame],
-    #     'Hallmark Boardreader'      : ['boardreader_hallmark', models.BRClusterDataFrame],
-    #     'Hallmark Twitter'          : ['topsy_hallmark', models.TopsyClusterDataFrame],
-    #     'Norton Twitter'            : ['topsy_norton', models.TopsyClusterDataFrame],
-    #     'Samsung Galaxy Twitter'    : ['topsy_samsung_galaxy', models.TopsyClusterDataFrame],
-    #     'Alternative Tobacco'       : ['topsy_alternative_tobacco', models.TopsyClusterDataFrame],
-    #     'Insurance Agent Twitter'   : ['topsy_insurance_agent', models.TopsyClusterDataFrame],
-    #     'Insurance Agent Blog/Board'   : ['boardreader_insurance_agent', models.BRClusterDataFrame],
-    #     'McDonalds Books Twitter'   : ['topsy_mcdonalds_books_weekof', models.TopsyClusterDataFrame],
-    #     'Meanstinks Twitter'        : ['topsy_meanstinks_big_asmbly', models.TopsyClusterDataFrame],
-    #     'McDonalds Flavor Twitter'  : ['topsy_mcdonalds_flavor', models.TopsyClusterDataFrame],
-    #     'McDonalds Employee Twitter'  : ['topsy_mcdonalds_employee', models.TopsyClusterDataFrame],
-    #     'McDonalds From Employee Twitter'  : ['topsy_mcdonalds_from_employee_2', models.TopsyClusterDataFrame],
-    # }
-    # datasources_2_managers = {
-    #     'Rock the Ranch'            : ['pm_comments_rtr', models.PMClusterDataFrame],
-    #     'All PM Comments'           : ['pm_web_comments', models.PMClusterDataFrame],
-    #     'PM Comments (RATED)'       : ['pm_web_comments_rated', models.PMClusterDataFrame],
-    #     'Hallmark Boardreader'      : ['boardreader_hallmark', models.BRClusterDataFrame],
-    #     'Hallmark Twitter'          : ['topsy_hallmark', models.TopsyClusterDataFrame],
-    #     'Norton Twitter'            : ['topsy_norton', models.TopsyClusterDataFrame],
-    #     'Samsung Galaxy Twitter'    : ['topsy_samsung_galaxy', models.TopsyClusterDataFrame],
-    #     'Alternative Tobacco'       : ['topsy_alternative_tobacco', models.TopsyClusterDataFrame],
-    #     'Insurance Agent Twitter'   : ['topsy_insurance_agent', models.TopsyClusterDataFrame],
-    #     'Insurance Agent Blog/Board'   : ['boardreader_insurance_agent', models.BRClusterDataFrame],
-    # }
-    # datasources = [
-    #     {
-    #         'name'      : 'Allstate',
-    #         'db_name'   : '',
-    #         'children'  : [
-    #             {
-    #                 'name'      : 'Insurance Agent',
-    #                 'db_name'   : '',
-    #                 'fts_url'   : '',
-    #                 'children'  : [
-    #                     {
-    #                         'id'        : 'allstate_insurance_agent_tweets',
-    #                         'name'      : 'Tweets',
-    #                         'db_name'   : 'topsy_insurance_agent',
-    #                         'fts_url'   : '',
-    #                         'children'  : []
-    #                     },
-    #                     {
-    #                         'id'        : 'allstate_insurance_agent_blog/board_posts',
-    #                         'name'      : 'Blog/Board Posts',
-    #                         'db_name'   : 'boardreader_insurance_agent',
-    #                         'fts_url'   : '',
-    #                         'children'  : []
-    #                     }
-    #                 ]
-    #             },
-    #         ]
-    #     },
-    #     {
-    #         'name'      : 'Hallmark',
-    #         'db_name'   : '',
-    #         'children'  : [
-    #             {
-    #                 'id'        : 'hallmark_tweets',
-    #                 'name'      : 'Tweets',
-    #                 'db_name'   : 'topsy_hallmark',
-    #                 'fts_url'   : '',
-    #                 'children'  : []
-    #             },
-    #             {
-    #                 'id'        : 'hallmark_blog/board_posts',
-    #                 'name'      : 'Blog/Board Posts',
-    #                 'db_name'   : 'boardreader_hallmark',
-    #                 'fts_url'   : '',
-    #                 'children'  : []
-    #             }
-    #         ]
-    #     },
-    #     {
-    #         'name'      : 'Norton',
-    #         'db_name'   : '',
-    #         'children'  : [
-    #             {
-    #                 'id'        : 'norton_tweets',
-    #                 'name'      : 'Tweets',
-    #                 'db_name'   : 'topsy_norton',
-    #                 'fts_url'   : '',
-    #                 'children'  : []
-    #             },
-    #         ]
-    #     },
-    #     {
-    #         'name'      : 'PM',
-    #         'db_name'   : '',
-    #         'children'  : [
-    #             {
-    #                 'id'        : 'pm_all_comments',
-    #                 'name'      : 'All Comments',
-    #                 'db_name'   : 'pm_web_comments',
-    #                 'fts_url'   : '',
-    #                 'children'  : []
-    #             },
-    #             {
-    #                 'id'        : 'pm_rated_comments',
-    #                 'name'      : 'Rated Comments',
-    #                 'db_name'   : 'pm_web_comments_rated',
-    #                 'fts_url'   : '',
-    #                 'children'  : []
-    #             },
-    #             {
-    #                 'id'        : 'pm_rock_the_ranch_comments',
-    #                 'name'      : 'Rock the Ranch Comments',
-    #                 'db_name'   : 'pm_comments_rtr',
-    #                 'fts_url'   : '',
-    #                 'children'  : []
-    #             },
-    #             {
-    #                 'id'        : 'pm_alternative_tobacco_tweets',
-    #                 'name'      : 'Alternative Tobacco Tweets',
-    #                 'db_name'   : 'topsy_alternative_tobacco',
-    #                 'fts_url'   : '',
-    #                 'children'  : []
-    #             }
-    #         ]
-    #     },
-    #     {
-    #         'name'      : 'Samsung',
-    #         'db_name'   : '',
-    #         'children'  : [
-    #             {
-    #                 'id'        : 'samsung_galaxy_tweets',
-    #                 'name'      : 'Galaxy Tweets',
-    #                 'db_name'   : 'topsy_samsung_galaxy',
-    #                 'fts_url'   : '',
-    #                 'children'  : []
-    #             },
-    #         ]
-    #     },
-    # ]
 
     def list_files(self):
         #   List files in 'raw_data'
@@ -366,15 +231,9 @@ class RawDataHandler(tornado.web.RequestHandler):
         assert source_name in names_2_pk
         pk = names_2_pk[source_name]
         obj = session.query(models_metadata.Dataset).get(pk) if pk else None
-        # pk = names_2_pk[source_name]
-        # obj = session.query(models_metadata.Dataset).get(pk) if pk else None
         if obj:
             db_name, df_cls = obj.name_db, obj.manager
             df_cls = getattr(models, df_cls.split('.')[-1])
-            #########
-            # print db_name, df_cls
-            # pdb.set_trace()
-            #########
             has_user_data = req_data.get('has_user_data', False)
             if has_user_data:
                 #   Get filters to restrict data by.
@@ -392,8 +251,6 @@ class RawDataHandler(tornado.web.RequestHandler):
                 filters['limit'] = limit
                 #   Get fields to include in output
                 fields = req_data.get('fields', {})
-                # print pformat(fields)
-                # pdb.set_trace()
                 #   Remove 'field' suffix
                 fields = [ k[:-6] for k, v in fields.iteritems() if v ]
                 df_maker = df_cls(
@@ -414,8 +271,7 @@ class RawDataHandler(tornado.web.RequestHandler):
                 """
                 result = json_encode({'db_info': db_info})
                 #########
-                # print pformat(db_info)
-                # pdb.set_trace()
+                LOGGER.debug(pformat(db_info))
                 #########
                 self.set_header("Content-Type", "application/json")
                 self.write(result)
@@ -484,16 +340,12 @@ def tornado_main():
     app = tornado.web.Application(
         ROUTES,
         default_host=options.host,
-        # cookie_secret="__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
-#         login_url="/auth/login",
         template_path=os.path.join(os.path.dirname(__file__), "templates"),
         static_path=os.path.join(os.path.dirname(__file__), "static"),
-        # xsrf_cookies=True,
     )
     http_server = tornado.httpserver.HTTPServer(app)
     http_server.listen(options.port)
-    #####
-    print "Starting to listen on {}:{}".format(options.host, options.port)
+    LOGGER.info("Starting to listen on {}:{}".format(options.host, options.port))
     tornado.ioloop.IOLoop.instance().start()
 
 
