@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<link rel="stylesheet" href="../static/css/style.css">
+		<title>Cluster App</title>
+		
+		<style>
+		* .hidden {
+			display: None;
+		}
+		
+		li {
+			list-style: None;
+		}
+		</style>
+		
+	</head>
+	<body>
+		<section id="cluster-app" class="container">
+			<header>
+				<button id="run-intro" class="btn btn-info pull-right" onclick="app.startExplanation();">
+					Explain How!
+				</button>
+				<h1 class="text-center" data-step="1" data-intro="Hi! This app helps find natural document groupings.">Clustering</h1>
+				<hr />
+			</header>
+			<section id="main container span12">
+<!-- 				<div>
+					<a href="#fakedata" id="fake-data" class="btn btn-large">
+						Generate Fake Data
+					</a>
+				</div> -->
+					<!-- class="container hero-unit"  -->
+					<div id="load-data-div" class="container">
+						<h2 class="text-center">Load Data</h2>
+						<form id="load-data-form" action="#" class="form-inline" enctype="multipart/form-data">
+							<div>
+								<label for="filename">
+									<select id="load-data-select" name="load-data-select" data-step="2" data-intro="Select 'example.csv' in the dropdown.">
+									</select>
+								</label>
+								<label for="cluster-name" data-step="3" data-intro="Add a name for the project; maybe 'test'.">Name:
+									<input id="cluster-name" type="text" />
+								</label>
+								<label for="cluster-refresh">Refresh:
+									<input id="cluster-refresh" type="checkbox" />
+								</label>
+								<button id="load-data" class="btn btn-large" data-step="4" data-intro="Click 'Load'. A sample of 50 items from the dataset will appear. (The example items are 185 news articles with an economic bent.)">
+									Load
+								</button>
+							</div>
+						</form>
+					</div>
+				<hr />
+				<ul id="cluster-list"></ul>
+			</section>
+			<section class="stats"></section>
+			<footer id="footer"></footer>
+		</section>
+		
+		<!-- JS templates -->
+		<!-- // <script type="text/template" id="cluster-list-template" src="../static/js/app/templates/cluster-list-view.html"></script> -->
+		<script type="text/template" id="cluster-list-template">
+			<div class="cluster-list-view">
+				<a href="#savelist" class="save-list btn">Save</a>
+				<a href="#closelist" class="close-list close_ btn">&times;</a>
+				<a href="#togglelist" class="toggle-list-size btn">
+					<%= visible ? '[-]' : '[+]' %>
+				</a>
+			</div>
+		</script>
+
+		<script type="text/template" id="form-control-template">
+			<div class="control-group">
+				<label class="control-label" for="<%= inputID %>">
+					<%- label %>
+					<span id="<%= inputID + '_choices' %>" class="btn btn-mini btn-info">?</span>
+				</label>
+				<div class="controls">
+					<input type="<%= inputType %>" id="<%= inputID %>" <%= placeHolder ? "placeholder=" + placeHolder : "" %> />
+				</div>
+			</div>
+		</script>
+
+
+		<!-- // <script type="text/template" id="cluster-template" src="../static/js/app/templates/cluster-view.html"></script> -->
+		<script type="text/template" id="cluster-template">
+			<div id=<%= cid %> class="cluster-view well">
+				<div class="run-cluster-intro">
+				<!--
+					<button  class="btn btn-info" onclick="introJs().goToStep(5).start();">
+						Keep explaining how!
+					</button>
+					</br>
+					</br>
+				-->
+				</div>
+				<span class="cluster-size" data-step="6" data-intro="The number of items.">
+					<i class="icon-th-list icon-white"></i>
+					<strong><%- size %></strong>
+				</span>
+				<div class="btn-toolbar pull-right" data-step="10" data-intro="Buttons that do stuff.">
+					<div class="btn-group">
+						<button href="#cluster" class="cluster btn btn-primary" data-step="11" data-intro="Cluster the dataset. Click it and you should see two or three datasets appear below; each one a thematically-similar subset of this one.">Cluster</button>
+						<button href="#graph" class="graph btn" data-step="12" data-intro="Graph the clusters.This is enabled after you've clicked 'Cluster'. Try clicking it once the dataset's been clustered." disabled>Graph</button>
+						<button href="#export" class="export btn" data-step="14" data-intro="Download the results as a CSV file. Clicking it once gets everything ready. Click it again to begin the download.">Export</button>
+						<button href="#finish" class="finish btn" data-step="15" data-intro="Clear the dataset from the screen.">Finish</button>
+						<span><strong>&nbsp;&#124;&nbsp;</strong></span>
+					</div>
+					<div class="btn-group">
+						<button href="#toggle" class="toggle-size btn" data-step="16" data-intro="Hide/Display the dataset. (Hiding it will leave the tags visible, while clearing it will remove everything.)">
+							<%= visible ? '-' : '+' %>
+						</button>
+						<button href="#close" class="close_ btn btn-danger" data-step="17" data-intro="Delete the dataset. (Removing clusters that contain mostly irrelevant items can lead to cleaner results.)">&times;</button>
+					</div>
+				</div>
+				<h3 class="cluster-name text-center" data-step="5" data-intro="The dataset you just loaded. Let's look at some of the features."><%- name %></h3>
+				<hr />
+				<form class="form-inline">
+					<label for="numClusters" data-step="7" data-intro="Suggest how many clusters we should aim for. ('2' is a good default.)">Number of Clusters:</label>
+					<input class="edit-num-cluster span1" type="text" value="<%- numClusters %>">
+					&nbsp;&nbsp;
+					<span><i class="icon-tags icon-white"></i></span>
+					<label class="edit-tags" for="tags">
+						<em data-step="8" data-intro="Add descriptive labels. You can add multiple tags by separating each entry with a comma.">Click to add tags</em>
+					</label>
+					<input class="edit-tags" type="text" value="<%- tagstr %>">
+				</form>
+				<hr />
+				<div class="info-feats" data-step="13" data-intro="Top words in the cluster. The darker the word, the more it characterizes the cluster. No words appear here, because it's the root dataset, but the clusters below should display them. Scroll down and have a look."></div>
+				<div class="charts"></div>
+				<table class="data table table-striped table-hover well" data-step="9" data-intro="50 items from the current dataset. Double-click on a row to delete it."></table>
+				<div class="children"></div>
+				<div class="stats"></div>
+			</div>
+		</script>
+
+		<!-- // <script type="text/template" id="stats-template" src="../static/js/app/templates/stats-view.html"></script> -->
+		<script type="text/template" id="stats-template"
+			<div class="stats-view">
+				<span class="remaining-count stat">
+					<%= remaining %> <%= remaining === 1 ? 'cluster' : 'clusters' %> left
+				</span>
+				<span class="total-count stat">
+					<%= total %> <%= total === 1 ? 'cluster' : 'clusters' %> total
+				</span>
+			</div>
+		</script>
+
+		<script type="text/template" id="scatterplot-template">
+			<!-- Scatterplot module -->
+			<div class="scatterplot container">
+			  <!-- Title -->
+			  <label class="title"><%- title %></label>
+			  <!-- About -->
+			  <span class="about"><%- about %></span>
+			  <!-- Data -->
+			  <div class="data">
+			    <!-- Chart -->
+			    <svg class="chart"></svg>
+			  </div>
+			</div>
+		</script>
+
+		<!-- JS -->
+		<script type="text/javascript" src="../static/js/lib/jquery.js"></script>
+		<script type="text/javascript" src="../static/js/lib/underscore-min.js"></script>
+		<script type="text/javascript" src="../static/js/lib/backbone.js"></script>
+		<script type="text/javascript" src="../static/js/lib/backbone.localStorage.js"></script>
+		<script type="text/javascript" src="../static/js/lib/crossfilter.js"></script>
+		<script type="text/javascript" src="../static/js/lib/colorbrewer.js"></script>
+		<script type="text/javascript" src="../static/js/lib/d3.v3.js"></script>
+		<script type="text/javascript" src="../static/js/lib/intro.min.js"></script>
+		<script type="text/javascript" src="../static/js/app/scatterplot.js"></script>
+		<script type="text/javascript" src="../static/js/app/app.js"></script>
+
+	</body>
+</html>

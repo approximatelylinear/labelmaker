@@ -1,0 +1,81 @@
+
+<!-- Requires bootstrap -->
+
+<style>
+	* .hidden {
+		display: None;
+	}
+	li {
+		list-style: None;
+	}
+	#search-app-search-results {
+		border: solid black 1px;
+	}
+	#search-app-search {
+		border: None;
+	}
+	.search-app-search-term {
+		display: inline;
+	}
+</style>
+
+
+<section id="search-app" class="container">
+	<form id="search-app-search" class="form-search">
+		<input type="text" class="search-query"/>
+	</form>
+	<section id="search-app-main" class="container">
+		<section id="search-app-search-terms">
+		</section>
+		<section id="search-app-top-words" class="span5 well">
+			<h2>Top Words</h2>
+			<div class="search-app-word-list"></div>
+		</section>
+		<section id="search-app-search-results" class="span5 offset2">
+			<h2>Top Documents</h2>
+			<table class="doc-list table table-striped table-hover well"></table>
+			<button  class="btn">
+				Find More
+			</button>
+		</section>
+	</section>
+</section>
+
+
+<script type="text/template" id="search-app-search-term-template">
+	<!-- 
+		A word currently in the search query.
+			Clicking [x] will remove it from the search query and re-run the search.
+	-->
+	<div class="search-app-search-term">
+		<button href="#remove-search-term" class="close btn">&times;</button>
+		<%= word %>
+	</div>
+</script>
+
+
+<script type="text/template" id="search-app-word-template">
+	<!-- 
+		A word in the search listing. 
+			Clicking it: 
+				Adds word to search query and re-runs it.
+				Re-calculates facets.
+	-->
+	<li class="search-app-word">
+		<%= word %>
+	</li>
+</script>
+
+
+<script type="text/template" id="search-app-word-list-template">
+	<!-- 
+		A list of words in the search
+			Clicking the button will hide its children.
+	-->
+	<div class="search-app-word-list">
+		<button href="#toggle" class="toggle-size btn">
+			<%= visible ? '-' : '+' %>
+		</button>
+		<ul></ul>
+	</div>
+</script>

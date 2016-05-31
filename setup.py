@@ -1,0 +1,35 @@
+import os
+from setuptools import setup, find_packages
+
+setup(
+    name = "cluster_webapp",
+    version = "0.2",
+    author = "Matthew Berends",
+    author_email = "matt.berends@arcww.com",
+    url = "",
+
+    packages = find_packages('.'),
+    package_dir = {'':'.'},
+    data_files=[('.', ['README',]),],
+
+    install_requires = [
+        'regex',
+        'pymongo',
+        'mongoengine',
+        'numpy',
+        'pytables', 
+        'pandas',
+        'termcolor',
+        'tornado',
+    ],
+    
+    package_data = {},
+    include_package_data=True,
+
+    keywords = "",
+    description = "Utilities for running python programs.",
+    classifiers = [
+        "Intended Audience :: Developers",
+        'Programming Language :: Python',
+    ]
+)

@@ -1,0 +1,35 @@
+#   Util
+termcolor
+simplejson
+regex
+python-dateutil==1.5
+cython
+nose
+sqlalchemy
+pyyaml
+#   Text
+chardet
+lxml
+BeautifulSoup
+pyparsing
+#   Communication
+requests
+certifi
+tornado
+urllib3
+#   Analysis
+numpy
+scipy
+numexpr
+nltk
+pandas
+scikit-learn
+matplotlib
+gensim
+#enchant
+
+#   DB
+pymongo
+blosc # Block-level compression library
+git+https://github.com/PyTables/PyTables.git@v.3.1.1#egg=tables
+elasticsearch

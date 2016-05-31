@@ -1,0 +1,15 @@
+<div id=<%= cid %> class="cluster-view hero-unit well">
+	<h3><%- name %></h3>
+	<a href="#cluster" class="cluster btn pull-right">Cluster</a>
+	<a href="#save" class="save btn pull-right">Save</a>
+	<a href="#close" class="close btn pull-right">&times;</a>
+	<a href="#toggle" class="toggle-size btn pull-right">
+		<%= visible ? '-' : '+' %>
+	</a>
+	<input class="edit-num-cluster" type="text" value="<%- numClusters %>">
+	<table class="data table table-striped well"></table>
+	<!--<label class="tags"></label>-->
+	<input class="edit-tags" type="text" value="<%- tags %>">
+	<div class="children"></div>
+	<div class="stats"></div>
+</div>

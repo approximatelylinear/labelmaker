@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<link rel="stylesheet" href="../static/css/style.css">
+		<title>Cluster App</title>
+		
+		<style>
+		* .hidden {
+			display: None;
+		}
+		
+		li {
+			list-style: None;
+		}
+		</style>
+		
+	</head>
+
+	<body>
+		<section id="classify-app" class="container">
+			<header>
+				<button id="run-intro" class="btn btn-info pull-right" onclick="app.startExplanation();">
+					Explain How!
+				</button>
+				<h1 class="text-center" data-step="1" data-intro="Hi! This app helps classify documents.">Clustering</h1>
+				<hr />
+			</header>
+			<section id="main container span12">
+				<div id="load-data-div" class="container">
+					<h2 class="text-center">Load Data</h2>
+					<form id="load-data-form" action="#" class="form-inline" enctype="multipart/form-data">
+						<div>
+							<label for="filename">
+								<select id="load-data-select" name="load-data-select" data-step="2" data-intro="Select 'example.csv' in the dropdown.">
+								</select>
+							</label>
+							<label for="classify-name" data-step="3" data-intro="Add a name for the project; maybe 'test'.">Name:
+								<input id="classify-name" type="text" />
+							</label>
+							<label for="classify-refresh">Refresh:
+								<input id="classify-refresh" type="checkbox" />
+							</label>
+							<button id="load-data" class="btn btn-large" data-step="4" data-intro="Click 'Load'. A sample of 50 items from the dataset will appear. (The example items are 185 news articles with an economic bent.)">
+								Load
+							</button>
+						</div>
+					</form>
+				</div>
+				<hr />
+				<ul id="category-list"></ul>
+			</section>
+			<section class="stats"></section>
+			<footer id="footer"></footer>
+		</section>
+
+		<script type="text/template" id="category-list-template">
+			<div class="category-list-view">
+				<a href="#savelist" class="save-list btn">Save</a>
+				<a href="#closelist" class="close-list close_ btn">&times;</a>
+				<a href="#togglelist" class="toggle-list-size btn">
+					<%= visible ? '[-]' : '[+]' %>
+				</a>
+			</div>
+		</script>
+
+		<script type="text/template" id="form-control-template">
+			<div class="control-group">
+				<label class="control-label" for="<%= inputID %>">
+					<%- label %>
+					<span id="<%= inputID + '_choices' %>" class="btn btn-mini btn-info">?</span>
+				</label>
+				<div class="controls">
+					<input type="<%= inputType %>" id="<%= inputID %>" <%= placeHolder ? "placeholder=" + placeHolder : "" %> />
+				</div>
+			</div>
+		</script>
+
+		<script type="text/template" id="category-template">
+			<div id=<%= cid %> class="category-view well">
+				<div class="run-category-intro">
+				<!--
+					<button  class="btn btn-info" onclick="introJs().goToStep(5).start();">
+						Keep explaining how!
+					</button>
+					</br>
+					</br>
+				-->
+				</div>
+				<span class="category-size" data-step="6" data-intro="The number of items.">
+					<i class="icon-th-list icon-white"></i>
+					<strong><%- size %></strong>
+				</span>
+				<div class="btn-toolbar pull-right" data-step="10" data-intro="Buttons that do stuff.">
+					<div class="btn-group">
+						<button href="#category" class="category btn btn-primary" data-step="11" data-intro="Cluster the dataset. Click it and you should see two or three datasets appear below; each one a thematically-similar subset of this one.">Cluster</button>
+						<button href="#graph" class="graph btn" data-step="12" data-intro="Graph the categories.This is enabled after you've clicked 'Classify'. Try clicking it once the dataset's been classified." disabled>Graph</button>
+						<button href="#export" class="export btn" data-step="14" data-intro="Download the results as a CSV file. Clicking it once gets everything ready. Click it again to begin the download.">Export</button>
+						<button href="#finish" class="finish btn" data-step="15" data-intro="Clear the dataset from the screen.">Finish</button>
+						<span><strong>&nbsp;&#124;&nbsp;</strong></span>
+					</div>
+					<div class="btn-group">
+						<button href="#toggle" class="toggle-size btn" data-step="16" data-intro="Hide/Display the dataset. (Hiding it will leave the tags visible, while clearing it will remove everything.)">
+							<%= visible ? '-' : '+' %>
+						</button>
+						<button href="#close" class="close_ btn btn-danger" data-step="17" data-intro="Delete the dataset. (Removing clusters that contain mostly irrelevant items can lead to cleaner results.)">&times;</button>
+					</div>
+				</div>
+				<h3 class="category-name text-center" data-step="5" data-intro="The dataset you just loaded. Let's look at some of the features."><%- name %></h3>
+				<hr />
+				<div class="info-feats" data-step="13" data-intro="Top words in the category. The darker the word, the more it characterizes the category."></div>
+				<div class="charts"></div>
+				<table class="data table table-striped table-hover well" data-step="9" data-intro="50 items from the current dataset. Double-click on a row to delete and flag it."></table>
+				<div class="stats"></div>
+			</div>
+		</script>
+
+	</body>

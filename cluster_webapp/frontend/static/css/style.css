@@ -1,0 +1,48 @@
+
+@import 'bootstrap.css';
+@import 'colorbrewer.css';
+@import 'introjs.css';
+
+.data.table-hover tbody tr:hover > td {
+	/*	Soft orange */
+  background-color: #ffb873;
+}
+
+.btn-group {
+	/*border: 1px solid;*/
+}
+
+.download {
+	/* Green text */
+}
+
+.custer-name {
+
+}
+
+input.edit-tags {
+	display: none;
+}
+
+.editing input.edit-tags {
+	display: inline;
+}
+
+.editing label.edit-tags {
+	display: none;
+}
+
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}
+
+.axis text {
+    font-family: sans-serif;
+    font-size: 11px;
+    /*	Note: not `color` */
+    fill: olive;
+}
