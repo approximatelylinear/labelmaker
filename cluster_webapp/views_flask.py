@@ -51,9 +51,9 @@ app.config.from_object(__name__)
 
 
 # app.add_url_rule(
-#     '/api', 
+#     '/api',
 #     view_func=index.as_view(
-#         'index', 
+#         'index',
 #         template_name='index.html')
 # )
 
@@ -62,7 +62,7 @@ app.config.from_object(__name__)
 @app.route('/api/')
 def index():
     return render_template('index.html')
-    
+
 
 
 @app.route('/api/clusters/<cluster_id>/export', methods=['GET', 'POST'])
@@ -137,15 +137,15 @@ def cluster(cluster_id):
         group_path = req_data['group_path']         #   h5 path
         h5fname = req_data['h5fname']                 #   OS location of h5 db
         num_clusters = int(req_data['numClusters'])
-        refresh = req_data['refresh']               #   Whether to redo the clustering    
+        refresh = req_data['refresh']               #   Whether to redo the clustering
         cluster_method = req_data.get('cluster_method', None) #   Name of clustering method
         #   Retrieve cluster from h5 store.
         cluster_maker = models.Cluster(
-            table_name=table_name, 
-            group_path=group_path, 
-            num_clusters=num_clusters, 
-            refresh=refresh, 
-            cluster_method=cluster_method, 
+            table_name=table_name,
+            group_path=group_path,
+            num_clusters=num_clusters,
+            refresh=refresh,
+            cluster_method=cluster_method,
             h5fname=h5fname
         )
         cluster_maker.load()
@@ -238,12 +238,12 @@ class ClusterAPI(MethodView):
         # h5fname = req_data.get('h5fname')
         if 'tags' in req_data:
             result = models.ClusterTable.update_labels(
-                labels=req_data['tags'], 
+                labels=req_data['tags'],
                 h5fname = req_data['h5fname'],
                 group_path=req_data['group_path'],
                 table_name=req_data['table_name'],
             )
-            #   Replace 
+            #   Replace
             # result = dict( (k.replace('/', '-')) for k, v in result.iteritems() )
             updated['tags'] = result
         #   ------------------------------------------------------------
@@ -253,18 +253,18 @@ class ClusterAPI(MethodView):
 
 cluster_view = ClusterAPI.as_view('cluster_api')
 app.add_url_rule(
-    '/api/clusters', 
+    '/api/clusters',
     defaults={'cluster_id': None},
-    view_func=cluster_view, 
+    view_func=cluster_view,
     methods=['GET',]
 )
 app.add_url_rule(
-    '/api/clusters', 
+    '/api/clusters',
     view_func=cluster_view,
     methods=['POST',]
 )
 app.add_url_rule(
-    '/api/clusters/<cluster_id>', 
+    '/api/clusters/<cluster_id>',
     view_func=cluster_view,
     methods=['GET', 'PUT', 'POST', 'DELETE']
 )
