@@ -3,9 +3,9 @@ from setuptools import setup, find_packages
 
 setup(
     name = "cluster_webapp",
-    version = "0.2",
-    author = "Matthew Berends",
-    author_email = "matt.berends@arcww.com",
+    version = "0.3",
+    author = "MJ Berends",
+    author_email = "mj@dose.com",
     url = "",
 
     packages = find_packages('.'),
@@ -17,17 +17,17 @@ setup(
         'pymongo',
         'mongoengine',
         'numpy',
-        'pytables', 
+        'pytables',
         'pandas',
         'termcolor',
         'tornado',
     ],
-    
+
     package_data = {},
     include_package_data=True,
 
     keywords = "",
-    description = "Utilities for running python programs.",
+    description = "Web frontend and backend logic for clustering data hierarchically.",
     classifiers = [
         "Intended Audience :: Developers",
         'Programming Language :: Python',
