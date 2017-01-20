@@ -26,10 +26,7 @@ from dateutil.parser import parse as date_parse
 from pymongo import MongoClient
 
 #   Custom
-from cluster_webapp.models_base import ClusterDataFrame
-
-#: The directory containing this script
-THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+from cluster_webapp.models.models_base import ClusterDataFrame
 
 #: Logger name
 LOGGER = logging.getLogger("base.models.mongo")
@@ -173,8 +170,6 @@ class MongoSession(object):
             update={
                 '$addToSet' : {'labels': {'$each': labels}},
             },
-            # full_response=True,
-            # new=True
         )
         result = collection.find_and_modify(
             {'_id': _id},
@@ -184,10 +179,6 @@ class MongoSession(object):
             full_response=True,
             new=True
         )
-        #########
-        # LOGGER.debug(pformat(result))
-        # pdb.set_trace()
-        #########
         if result['ok']:
             label_count = len(result['value']['labels'])
             result = collection.find_and_modify(
@@ -198,18 +189,6 @@ class MongoSession(object):
                 new=True,
             )
             assert result['label_count'] == label_count
-        # collection.update(
-        #     {'_id': _id},
-        #     {
-        #         '$pull': {'labels': '__none__'},    #   Remove the placeholder
-        #     }
-        # )
-        # collection.update(
-        #     {'_id': _id},
-        #     {
-        #         '$addToSet' : {'labels': {'$each': labels}},
-        #         '$inc'      : {'label_count': len(set(labels))}
-        #     }
 
     @staticmethod
     def row_to_dict(d, db_post):

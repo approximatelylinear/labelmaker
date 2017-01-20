@@ -84,24 +84,7 @@ app.Cluster = Backbone.Model.extend({
 		return crossfilter(this.get('data'));
 	},
 	finish		: function () {
-		///////
 		return
-		///////
-		// var that = this;
-		// var children = [];
-		// //	Copy the children to a new variable.
-		// _.each(this.children, function (c) {children.push(c);});
-		// var stop_idx = 0;
-		// while (children.length > 0) {
-		// 	var child = children.pop();
-		// 	// child.save({'finished': true});
-		// 	//	Add the next batch of children.
-		// 	_.each(child.children, function (c) {children.push(c);});
-		// 	if (stop_idx > stop) {
-		// 		break;
-		// 	}
-		// 	stop_idx += 1;
-		// }
 	},
 	updateTags 	: function (data) {
 		var that = this;
@@ -123,9 +106,6 @@ app.Cluster = Backbone.Model.extend({
 		if (!(this.id in tag_data)) {
 			//	Try to find the tags belonging to this model's group.
 			var group_path = [this.get('h5fname'), this.get('group_path')].join('/').replace(/\//gi, '-');
-			////////
-			// console.log(group_path);
-			////////
 			this.set('tags', tag_data[group_path]);
 		}
 		else {
@@ -201,12 +181,6 @@ app.Cluster = Backbone.Model.extend({
 			_.each(
 				data,
 				function (d) {
-					// var data = d.data;
-					// var tags = d.tags;
-					// var group_path = d.group_path;
-					// var table_name = d.table_name;
-					// var h5fname = d.h5fname;
-					// var size = d.size;
 					if (d.size > 0) {
 						//	Sort the cluster data by id.
 						d.data = this.sortData(d.data, 'row_idx');
@@ -252,10 +226,6 @@ app.Cluster = Backbone.Model.extend({
 	    return result;
 	},
 	fakeCluster		: function () {
-		//	DEBUGGING
-		///////////////////////////
-		console.log('Clustering!');
-		///////////////////////////
 		if (this.has('data')) {
 			var data = this.get('data');
 			//	N-sect the data.
@@ -289,7 +259,6 @@ app.RootCluster = new app.Cluster();
 app.ClusterList = Backbone.Collection.extend({
 	model			: app.Cluster,
 	url				: '/cluster/',
-// 	localStorage	: app.localStorage,
 	//	TODO:	Sum stats from children.
 	stats			: new app.Stats({
 		total		: this.competed + this.remaining,
@@ -317,13 +286,11 @@ app.AppView = Backbone.View.extend({
 		this.$main = this.$('#main');
 		this.$footer = this.$('#footer');
 		//	TODO:	Determine specific event to listen to.
-// 		this.listenTo(app.RootCluster, 'all', this.addRoot );
 		this.render();
 	},
 	events			: {
 		'click #fake-data'			: 'createFakeData',
 		'click #load-data'			: 'loadData',
-		// 'click #cluster-refresh'	: 'toggleRefresh'
 	},
 	addRoot			: function (collection) {
 		var collection = collection || this.collection;
@@ -343,14 +310,11 @@ app.AppView = Backbone.View.extend({
 		this.renderSrcNames();
 	},
 	renderSrcNames 	: function () {
-		// Backbone.ajax(
 		$.ajax(
 			{
 				url			: '/load/',
 				type		: 'GET',
 				success		: function (data, status, jqXHR) {
-					// console.dir(data);
-					// console.log(status);
 					//	Add file names to select element.
 					var $select = $('#load-data-select');
 					$select.detach();
@@ -549,9 +513,6 @@ app.AppView = Backbone.View.extend({
 					dataType	: 'json',
 					contentType : 'application/json',
 					success	: function (data, status, jqXHR) {
-						// console.dir(data);
-						// console.log(status);
-						// console.log(jqXHR);
 						that.$('#load-data').removeClass('hidden');
 						if (_.has(data, 'db_info')) {
 							var db_info = data.db_info;
@@ -581,22 +542,6 @@ app.AppView = Backbone.View.extend({
 					}
 				}
 			);
-			// var ajaxOpts = {
-			// 	url			: '/load',
-			// 	type		: 'POST',
-			// 	success		: function (model, data, jqXHR) {
-			// 		// console.log('Loaded data!')
-			// 		// console.dir(data);
-			// 		// console.log(status);
-			// 		//	Remove the loading gif.
-			// 		$('#cluster-list').children('img.loading').remove();
-			// 		that.addRoot();
-			// 	}
-			// };
-			// var root = this.collection.create(
-			// 	formData,
-			// 	ajaxOpts
-			// );
 		}
 	},
 });
@@ -631,7 +576,6 @@ app.ClusterListView = Backbone.View.extend({
 		cluster.url = this.collection.url + '/' + cluster.id;
 		var view = new app.ClusterView({ model: cluster});
 		//	Keep parent and child references.
-		// view.parentView = this;
 		this.childViews.push(view);
 		this.$el.append( view.render().el );
 	},
@@ -695,7 +639,6 @@ app.ClusterView = Backbone.View.extend({
 		'click .toggle-size'		: 'toggleSize',
 		'click label.edit-tags'		: 'editTags',
 		'keypress input.edit-tags'	: 'updateTagsOnEnter',
-		// 'blur input.edit-tags'		: 'updateTagsOnBlur'
 	},
 	model				: null,
 	initialize			: function () {
@@ -706,13 +649,6 @@ app.ClusterView = Backbone.View.extend({
 			//		re-render size
 			//		re-render download link
 			//		remove references to deleted children from the childrenView.
-
-			//this.listenTo(this.model, 'change', this.render());
-			//this.listenTo(this.model, 'change:data', this.addData());
-			//this.listenTo(this.model, 'change:children', this.addChildren());
-			////////////////////////////////////
-			// console.log(this.model.get('data'));
-			////////////////////////////////////
 			if (this.model.children) {
 				this.model.children.fetch();
 				this.addChildren();
@@ -759,7 +695,6 @@ app.ClusterView = Backbone.View.extend({
 				v 	: d['magnitude']
 			});
 		});
-		// this.model.sortData(newInfoFeats, 'v', 1);
 		return newInfoFeats;
 	},
 	renderInfoFeats		: function () {
@@ -785,13 +720,9 @@ app.ClusterView = Backbone.View.extend({
 				var $elem = $('<span></span')
 					.text(feat)
 					.css('color', c.toString());
-				/////////
-				// console.log($elem)
-				/////////
 				$infoFeats.append($elem)
 			});
 			$infoFeats.append($('<hr />'));
-			// $parent.append($infoFeats);
 			$infoFeats.insertBefore($data);
 		}
 	},
@@ -846,9 +777,6 @@ app.ClusterView = Backbone.View.extend({
 
 	},
 	removeData			: function (evt, view) {
-		/////
-		// console.log('Deleting data!');
-		/////
 		evt.preventDefault();
 		evt.stopPropagation();
 		var $target = $(evt.currentTarget);
@@ -871,10 +799,6 @@ app.ClusterView = Backbone.View.extend({
 				dataType	: 'json',
 				contentType : 'application/json',
 				success	: function (data, status, jqXHR) {
-					///////////////////
-					// console.log(status);
-					// console.log(data);
-					///////////////////
 					$target.off();	//	Remove all events to prevent memory leakage.
 					$target.addClass('error').fadeOut( 500, function() { this.remove(); });
 					//	Re-render the rows.
@@ -896,7 +820,6 @@ app.ClusterView = Backbone.View.extend({
 	exportData	: function (evt) {
 		evt.preventDefault();
 		evt.stopPropagation();
-		// var $exportBtn = this.$('.export');
 		var $exportBtn = this.$('.export').first();
 		var that = this;
 		var url = this.model.getUrl();
@@ -940,8 +863,6 @@ app.ClusterView = Backbone.View.extend({
 							'href'		: href
 						});
 						$exportBtn.replaceWith($exportLink);
-						//	Remove the loading gif.
-						// $exportBtn.children('img.loading').remove();
 					}
 				},
 				error: function( req, status, err ) {
@@ -977,16 +898,6 @@ app.ClusterView = Backbone.View.extend({
 		else {
 			$tagDisplay.html($('<em>Click to add tags</em>'));
 		}
-		/*
-		var tagElems = [];
-		_.each(tags, function (d) {
-			var $tagElem = $('<span></span')
-				.text(d)
-				//	Add a click-handler for removing the tag.
-				.on('dblclick', function (evt) { return that.removeTag(evt, that) } );
-			tagElems.append($tagElem);
-		});
-		*/
 		if (this.childrenView) {
 			this.childrenView.renderTags();
 		}
@@ -1054,20 +965,16 @@ app.ClusterView = Backbone.View.extend({
 				dataType	: 'json',
 				contentType : 'application/json',
 				success	: function (data, status, jqXHR) {
-					// console.log('Created a new cluster on the server!')
-					// console.dir(data);
-					// console.log(status);
+					console.log('Created a new cluster on the server!')
 					that.model.cluster(data.parent, data.children);
 					that.addChildren();
 					var $elem = that.$('#' + that.model.cid);
 					$elem.children('.data').remove();
 					$elem.children('.cluster').remove();
-					//	Disable the graph button for the node that was clustered.
+					//	Disable the cluster button for the node that was clustered.
 					that.$('>div>div>div>button.cluster').prop('disabled', true);
 					//	Enable the graph button for the node that was clustered.
 					that.$('>div>div>div>button.graph').prop('disabled', false);
-					//	Remove the loading gif.
-					// that.$('.children').children('img.loading').remove();
 					$clusterBtn.children('img.loading').remove();
 				},
 				error: function( req, status, err ) {
@@ -1092,7 +999,6 @@ app.ClusterView = Backbone.View.extend({
 		//	Switch to editing view
 		this.$el.addClass('editing');
 		this.$tagInput.focus();
-		// this.$tagInput.addClass('editing');
 	},
 	updateTags 			: function (context) {
 		var $tagInput = context.$('input.edit-tags');
@@ -1107,9 +1013,6 @@ app.ClusterView = Backbone.View.extend({
 				$loading = $('<img class="loading" src="../static/img/ajax-loader.gif"></img>');
 				$loading = $loading.insertBefore($tagDisplay);
 			}
-			// else {
-				// $loading = $loading[0];
-			// }
 			//////////////////////////////////////////////////////
 			console.log(value + ' ===> ');
 			_.each(values, function (v) { console.log('    ' + v); });
@@ -1121,9 +1024,6 @@ app.ClusterView = Backbone.View.extend({
 				},
 				{ 	url 	: context.model.getUrl() + '/',
 					success	: function (model, data, jqXHR) {
-						//////////
-						// console.log(data)
-						//////////
 						that.model.updateTags(data);
 						//	Re-render this node's tags and its children.
 						that.renderTags();
@@ -1146,8 +1046,6 @@ app.ClusterView = Backbone.View.extend({
 		evt.stopPropagation();
 		if (evt.which === ENTER_KEY) {
 			this.updateTags(this);
-			// var $tagInput = this.$('input.edit-tags');
-			// $tagInput.trigger('blur');
 		}
 	},
 	editNumCls			: function (evt) {
@@ -1170,7 +1068,6 @@ app.ClusterView = Backbone.View.extend({
 		evt.preventDefault();
 		evt.stopPropagation();
 		//	Save to database, perform no further clustering.
-		// this.model.finish();
 		this.remove();
 	},
 	close				: function (evt) {
@@ -1181,33 +1078,11 @@ app.ClusterView = Backbone.View.extend({
 		this.model.destroy({
 			url: 		this.model.getUrl() + '/',
 			success	: 	function (model, response) {
-				///////////
-				// console.log(model);
-				// console.log(response);
-				////////////
 				if ((response.error !== undefined) && (response.error === 1)) {
 					that.$el.addClass('error');
 					that.$el.prepend($('<span>Failed to delete this cluster.</span>'));
 				}
 				else {
-					// if (this.parentView) {
-					// 	this.parentView.childViews();
-					// }
-					// var views = [this.childrenView];
-					// var stop_idx = 0;
-					// while (views.length > 0) {
-					// 	var view = views.pop();
-					// 	//	Add the next batch of children.
-					// 	while (child.children.length > 0) {
-					// 		children.push(child.children.pop());
-					// 	}
-					// 	//	Remove the child from the DOM and memory.
-					// 	child.remove();
-					// 	if (stop_idx > stop) {
-					// 		break;
-					// 	}
-					// 	stop_idx += 1;
-					// }
 					that.childrenView = null;
 					that.remove();
 				}

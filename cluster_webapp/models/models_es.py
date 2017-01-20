@@ -26,17 +26,9 @@ from tables import IsDescription, StringCol, open_file
 from termcolor import colored, cprint
 from dateutil.parser import parse as date_parse
 
+
 #   Custom
-from cluster_webapp.models_base import (
-    ClusterDataFrame, vec_maybe_date_parse, vec_maybe_join_seq,
-    vec_maybe_join_seq_comma, vec_maybe_encode_utf8
-)
-
-from cluster_webapp.lib.clustering import clusterers
-from cluster_webapp.lib.text_processing import clean as text_clean
-
-#: The directory containing this script
-THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+from cluster_webapp.models.models_base import ClusterDataFrame
 
 #: Logger name
 LOGGER = logging.getLogger("base.models.es")

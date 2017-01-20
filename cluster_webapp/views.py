@@ -19,32 +19,19 @@ import conf
 
 LOGGER = logging.getLogger(__name__)
 
-#:  The directory containing this script
-THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-
-DOWNLOAD_FOLDER = os.path.join(THIS_DIR, 'data', 'clusters', 'labeled')
-ALLOWED_EXTENSIONS = set(['txt', 'csv', 'xlsx', 'xls'])
-
 
 class ExportHandler(tornado.web.RequestHandler):
     def get(self, fname):
-        #   '/cluster/<fname>/download'
+        #   '/cluster/download/<fname>'
         #   Try to download the file.
-        ###########
-        # print 'download_file: {0}'.format(fname)
-        # pdb.set_trace()
-        ###########
         fname = secure_filename(fname)
-        path = os.path.join(DOWNLOAD_FOLDER, fname)
+        path = os.path.join(conf.DOWNLOAD_PATH, fname)
         if not os.path.isfile(path):
             raise tornado.web.HTTPError(404)
         info = os.stat(path)
         mimetype = 'text/csv'   #   'application/octet-stream'   #      "application/unknown"
         self.set_header("Content-Type", 'application/octet-stream')
         self.set_header("Content-Length", info.st_size)
-        """
-        self.set_header("Last-Modified", datetime.datetime.utcfromtimestamp(info.st_mtime))
-        """
         self.set_header(
             "Last-Modified",
             datetime.datetime.utcfromtimestamp(info.st_mtime)
@@ -72,14 +59,10 @@ class ExportHandler(tornado.web.RequestHandler):
 
 
 
-class RowHandler(tornado.web.RequestHandler):
+class RemoveRowHandler(tornado.web.RequestHandler):
     def post(self, cluster_id=None):
         #   cluster_id
         req_data = tornado.escape.json_decode(self.request.body)
-        #   -------------------
-        # print pformat(req_data)
-        # pdb.set_trace()
-        #   -------------------
         idx = int(req_data['idx'])
         try:
             models.ClusterTable.load(
@@ -91,7 +74,6 @@ class RowHandler(tornado.web.RequestHandler):
             )
         except Exception as e:
             LOGGER.exception(e)
-            # pdb.set_trace()
             result = {
                 'error' : 1,
                 'msg'   : repr(e)
@@ -200,12 +182,11 @@ class ClusterDataHandler(tornado.web.RequestHandler):
 
 
 class RawDataHandler(tornado.web.RequestHandler):
-    base_path = os.path.join(THIS_DIR, 'data', 'raw')
+    base_path = conf.RAW_DATA_PATH
 
     def list_files(self):
         #   List files in 'raw_data'
-        # raw_data_files = [(n, None) for n in  os.listdir(self.base_path)]
-        raw_data_files = []
+        raw_data_files = [(n, None) for n in  os.listdir(self.base_path)]
         raw_data_files.extend(models_metadata.list_datasets())
         return raw_data_files
 
@@ -313,7 +294,7 @@ class MainHandler(tornado.web.RequestHandler):
 define("host", default='127.0.0.1', help="run on the given host", type=str)
 define(
     "port",
-    default=5000, #8888,
+    default=5001, #8888,
     help="run on the given port", type=int
 )
 
@@ -322,17 +303,13 @@ ROUTES = [
     (r"^/load/?$", RawDataHandler),
     (r"^/cluster?/$", ClusterDataHandler),
     (r"^/cluster/(?P<cluster_id>[\w\-\.]+)/$", ClusterDataHandler),
-    (r"^/cluster/(?P<cluster_id>[\w\-\.]+)/cluster/$", ClusterHandler),
-    (r"^/cluster/(?P<cluster_id>[\w\-\.]+)/export/$", ExportHandler),
-    (r"^/cluster/(?P<fname>[\w\-\.]+)/download/$", ExportHandler),
-    (r"^/cluster/(?P<cluster_id>[\w\-\.]+)/remove_row/$", RowHandler),
+    (r"^/cluster/cluster/(?P<cluster_id>[\w\-\.]+)/$", ClusterHandler),
+    (r"^/cluster/export/(?P<cluster_id>[\w\-\.]+)/$", ExportHandler),
+    (r"^/cluster/download/(?P<fname>[\w\-\.]+)/$", ExportHandler),
+    (r"^/cluster/remove_row/(?P<cluster_id>[\w\-\.]+)/$", RemoveRowHandler),
     #   TODO:
     #       Add classification handler
 
-    #   TODO:   Migrate to this url pattern:
-    #               (r"/cluster/cluster/<cluster_id>", ClusterHandler),
-    #               (r"/cluster/export/<cluster_id>", ExportHandler),
-    #               (r"/cluster/remove_row/<cluster_id>", RowHandler),
 ]
 
 def tornado_main():
@@ -340,8 +317,9 @@ def tornado_main():
     app = tornado.web.Application(
         ROUTES,
         default_host=options.host,
-        template_path=os.path.join(os.path.dirname(__file__), "templates"),
-        static_path=os.path.join(os.path.dirname(__file__), "static"),
+        template_path=os.path.join(os.path.dirname(__file__), "frontend", "templates"),
+        static_path=os.path.join(
+            os.path.dirname(__file__), "frontend", "static"),
     )
     http_server = tornado.httpserver.HTTPServer(app)
     http_server.listen(options.port)
@@ -351,6 +329,6 @@ def tornado_main():
 
 if __name__ == "__main__":
     import logging
-    config = conf.setup_logging()
-    logging.config.dictConfig(config)
+    # config = conf.setup_logging()
+    logging.basicConfig(level=logging.DEBUG)
     tornado_main()

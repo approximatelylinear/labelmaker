@@ -20,12 +20,15 @@ import dateutil
 from dateutil.parser import parse as date_parse
 from termcolor import colored
 
-THIS_DIR = os.path.realpath(os.path.dirname('__file__'))
+#   Custom
+from cluster_webapp import conf
 
 Base = declarative_base()
 
 def load_fixtures(fname):
-    with open(os.path.join(THIS_DIR, fname), 'rbU') as f:
+    if not os.path.exists(conf.FIXTURES_DATA_PATH):
+        os.makedirs(conf.FIXTURES_DATA_PATH)
+    with open(os.path.join(conf.FIXTURES_DATA_PATH, fname), 'rbU') as f:
         docs = yaml.load_all(f)
         for doc in docs:
             yield doc
@@ -59,7 +62,7 @@ class Dataset(Base):
     brand = Column(String)
     source = Column(String)
     path = Column(String) # TBD: add convention for the host/port.
-    type = Column(String) # Tweet, Post, ugc_pm
+    type = Column(String) # Tweet, Post, etc.
     url_fts = Column(String, nullable=True)
     date_create = Column(DateTime)
     timestamp = Column(DateTime)
@@ -68,7 +71,7 @@ class Dataset(Base):
 
     @staticmethod
     def create_id(item):
-        return '_'.join([item['brand'], item['source'], item['name']])
+        return '_'.join([item['source'], item['name']])
 
 
 class User(Base):
@@ -101,7 +104,6 @@ def setup_datasets(session):
     items = list(items)
     print pformat(items)
     for item in items:
-        #   id: brand + source + name
         item['id'] = Dataset.create_id(item)
         item['date_create'] = date_parse(item['date_create'])
     session.add_all([Dataset(**item) for item in items])

@@ -3,7 +3,7 @@
 //  Scatterplot Module
 var ScatterPlot = function (dataset, catNum, selector) {
     /*
-    Data should be in form: 
+    Data should be in form:
         [ {x: <INT>, y: <INT>, c: <CATEGORY> }]
     */
     var cats = d3.nest()
@@ -40,7 +40,6 @@ var ScatterPlot = function (dataset, catNum, selector) {
     var yLim = Math.max(Math.abs(yMin), Math.abs(yMax));
     var yScale = d3.scale.linear()
         .domain([-yLim, +yLim])
-        // .range([size.height, 0]);
         .range([size.height - padding, padding]);
     var rScale = d3.scale.linear()
         .domain([-yLim, +yLim])
@@ -63,8 +62,6 @@ var ScatterPlot = function (dataset, catNum, selector) {
         .attr({
             x       : padding,
             y       : padding,
-            // width   : size.width - (padding * 3), 
-            // height  : size.height - (padding * 2)
             width   : size.width,
             height  : size.height
         });
@@ -78,14 +75,13 @@ var ScatterPlot = function (dataset, catNum, selector) {
             .data(dataset)
             .enter()
                 .append('svg:circle')
-                .attr('cx', function (d) { 
-                    return xScale(d.x); 
+                .attr('cx', function (d) {
+                    return xScale(d.x);
                 })
                 .attr('cy', function (d) {
                     return yScale(d.y);
                 })
                 .attr('r', function (d) {
-                    // return rScale(d.y);
                     return 5;
                 })
                 .attr('fill', function (d) {
@@ -96,40 +92,11 @@ var ScatterPlot = function (dataset, catNum, selector) {
                         c = parseInt(c);
                     }
                     c = colors(c);
-                    ///////
-                    // console.log(c)
-                    ///////
                     return c;
                 });
-    //  Bind annotations
-    // svg.append('svg:g')
-    //     .attr({
-    //         id          : "annotations",
-    //         'clip-path' : "url(#chart-area)"
-    //     })
-    //     .selectAll('text')
-    //         .data(dataset)
-    //         .enter()
-    //             .append('svg:text')
-    //             .text( function (d) {
-    //                 return d.x + "," + d.y;
-    //             })
-    //             .attr("x", function (d) {
-    //                 return xScale(d.x);
-    //             })
-    //             .attr("y", function (d) {
-    //                 return yScale(d.y);
-    //             })
-    //             //  Font attributes
-    //             .attr({
-    //                 'font-family'   : 'sans-serif',
-    //                 'font-size'     : '11px',
-    //                 'fill'          : 'red'
-    //             });
     // Legend
     var legend = svg.selectAll("g.legend")
         .data(cats)
-        //_.range(catNum))
         .enter()
             .append("svg:g")
             .attr({
@@ -157,21 +124,18 @@ var ScatterPlot = function (dataset, catNum, selector) {
             x   : 12,
             dy  : ".31em",
         })
-        .text( function (d) { 
+        .text( function (d) {
             var c = d.key;
-            return "Cluster " + c; 
+            return "Cluster " + c;
         });
     //  Display axes
     svg.append("svg:g")
         .attr("class", "x axis")
-        //  Move to the bottom
-        // .attr("transform", "translate(0," + (size.height - padding) + ")")
         // Move to the center
         .attr("transform", "translate(0," + ((size.height - padding) / 2) + ")")
         .call(xAxis);
     svg.append("svg:g")
         .attr("class", "y axis")
-        // .attr("transform", "translate(" + padding + ",0)")
         .attr("transform", "translate(" + ((size.width - padding) / 2) + ",0)")
         .call(yAxis);
     //      Add axis event handlers
