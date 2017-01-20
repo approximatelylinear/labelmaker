@@ -93,17 +93,10 @@ class Cluster(object):
             #   Load the cluster data
             os_path = os.path.join(self.base_path, self.h5fname)
             with open_file(os_path, mode="r+") as h5file:
-                #######
-                # pdb.set_trace()
-                #######
                 cluster_path = '/'.join([self.group_path, self.table_name])
                 cluster_table = h5file.get_node(cluster_path)
                 df = ClusterTable.table_to_df(cluster_table)
                 self.df = df
-        ########
-        # LOGGER.debug(self.df)
-        # pdb.set_trace()
-        ########
         return self.df
 
     def cluster(self, df=None, to_csv=True):
@@ -116,15 +109,6 @@ class Cluster(object):
         cluster_columns = self.cluster_columns
         cluster_columns = [ c for c in cluster_columns if c in df ]
         df = df[cluster_columns]
-        #   Save the content to the clustering directory
-        # fname = self.table_name
-        # if not fname.endswith('.pkl'): fname += '.pkl'
-        # cluster_path = os.path.join(self.cluster_doc_dir, fname)
-        # #   Save data to the location expected by the clustering routine.
-        # df.to_pickle(cluster_path)
-        ########
-        # pdb.set_trace()
-        ########
         clusterer = self.clusterer
         if len(df) > 2:
             #   --------------------------------------------
@@ -135,11 +119,6 @@ class Cluster(object):
                 clusterer.create_models(df)
                 clusters = clusterer.doc_cluster(df, base_dir=self.base_path)
                 info_feats = self.get_info_features()
-                ##########
-                # LOGGER.debug(clusters)
-                # LOGGER.debug(info_feats)
-                # pdb.set_trace()
-                ##########
                 #   Remove saved data.
                 self.clusterer.delete_dependencies()
 
@@ -156,18 +135,10 @@ class Cluster(object):
             clusters = df
             df['docnum'] = None
             df['cluster_id'] = 0
-        ########
-        # LOGGER.debug(clusters)
-        # pdb.set_trace()
-        ########
         clusters = self.normalize(clusters)
         #   Add original columns back.
         for col in (set(orig_df) - set(clusters)):
             clusters[col] = orig_df[col]
-        ########
-        # LOGGER.debug(clusters)
-        # pdb.set_trace()
-        ########
         if to_csv: self.to_csv(clusters)
         return clusters
 
@@ -227,17 +198,7 @@ class Cluster(object):
         if not os.path.exists(target_path): os.makedirs(target_path)
         fname = '{0}.csv'.format(self.table_name)
         path = os.path.join(target_path, fname)
-        #############
-        # pdb.set_trace()
-        #############
-        try:
-            clusters.to_csv(path, index=False)
-        except Exception as e:
-            print e
-            #   Try to modify the encoding
-            for col in clusters:
-                pass
-                # pdb.set_trace()
+        clusters.to_csv(path, index=False)
 
     def get_info_features(self, to_csv=False):
         func_name = '.'.join([__name__, self.__class__.__name__, 'get_info_features'])
@@ -245,14 +206,10 @@ class Cluster(object):
             clusterer = self.clusterer
             #   Get features characterizing each cluster.
             info_features = clusterer.get_info_features()
-            #######
-            # pdb.set_trace()
-            #######
             info_features = self.set_cluster_ids(info_features)
             info_features = info_features.rename(
                 columns={'counts': 'magnitude', 'ids': 'words'}
             )
-            # lvl_idxs = list(set(all_counts.index.get_level_values(0)))
             if to_csv:
                 #   Save informative features.
                 info_feats_path = os.path.join(base_path, 'info_feats')
@@ -271,16 +228,11 @@ class Cluster(object):
 
             info_features = info_features.groupby('cluster_id')
             info_features = info_features.apply(flatten_info_feats)
-            ##########
-            # LOGGER.debug(info_features)
-            # pdb.set_trace()
-            ##########
         except Exception as e:
             #######################################################
             LOGGER.error('{n}: Error getting informative features:\n\t{e}'.format(
                 n=colored(func_name, 'yellow'), e=colored(e, 'red')
             ))
-            # pdb.set_trace()
             #######################################################
         self.info_features = info_features
         return info_features
@@ -511,7 +463,6 @@ class ClusterTable(object):
                 LOGGER.info('Informative features: {0}'.format(
                     colored(pformat(info_feats), 'magenta')
                 ))
-                # pdb.set_trace()
                 ##########
 
                 #   Return an identifier to the current cluster group and a sample of the data
@@ -551,13 +502,6 @@ class ClusterTable(object):
         #   Update table tags
         self.label(cluster_table, tags)
         total = len(cluster_df)
-        # existing_ids = self.update_existing(cluster_df, cluster_table)
-        #   Remove existing rows from the data.
-        #####
-        #   TODO:   Should the following line be this?
-        #               cluster_df = cluster_df[~cluster_df.id.isin(existing_ids)]
-        # curr_df = cluster_df[~cluster_df.id.isin(existing_ids)]
-        #####
         new_ids = self.insert_new(cluster_df, cluster_table)
         ids = set(cluster_table.col('id'))
         cluster_df = cluster_df[cluster_df.id.isin(new_ids)]
@@ -569,10 +513,6 @@ class ClusterTable(object):
             colored(str(len(ids)), 'cyan'),
             colored(cluster_table_name, 'red')
         ))
-        ###############
-        # pdb.set_trace()
-        # LOGGER.debug(self.table_to_df(cluster_table))
-        ###############
         #   -----------------------------------------
         sample = ClusterDataFrame.sample(cluster_df)
         size = len(cluster_df)
@@ -590,7 +530,6 @@ class ClusterTable(object):
                 h5file.remove_node(leaf_path)
             except Exception as e:
                 LOGGER.error(e)
-                # pdb.set_trace()
             else:
                 #   --------------
                 LOGGER.info('\tFinished!')
@@ -679,10 +618,7 @@ class ClusterTable(object):
 
     @classmethod
     def remove_table_row(cls, table, idx=None):
-        ##########
-        # LOGGER.debug(table.read(idx, idx + 1))
-        ##########
-        #   TODO:   In the pytables 3.0 API, an stop index must be supplied.
+        #   TODO:   In the pytables 3.0 API, a stop index must be supplied.
         table.remove_rows(idx)
 
     @classmethod
@@ -700,17 +636,11 @@ class ClusterTable(object):
             except Exception as e:
                 LOGGER.error(colored(e, 'red'))
                 LOGGER.warn('Looking for a group...')
-                ###############
-                # pdb.set_trace()
-                ###############
                 try:
                     #   Try to retrieve the group
                     node = h5file.get_node(group_path)
                 except Exception as e:
                     LOGGER.error(colored(e, 'red'))
-                    ###############
-                    # pdb.set_trace()
-                    ###############
             if callback is not None:
                 return callback(node, **callback_kwargs)
 
@@ -728,7 +658,6 @@ class ClusterTable(object):
             df.label = df.label.map(lambda l: set([t.lower().strip() for t in l]))
         new_rows = []
         for idx, (k, row) in enumerate(df.iterrows()):
-    #         if idx > 100: break
             db_post = collection.find_one({'_id': k})
             d = self.row_to_dict(row, db_post)
             #   Update the post with new tags
@@ -747,11 +676,6 @@ class ClusterTable(object):
             db_name=None, db_type=None,
             mongo_session_maker=None,
         ):
-        ########
-        #   DEBUGGING
-        # db_name = 'pm_web_comments'
-        # pdb.set_trace()
-        ########
         fname = fname or '/'.join([h5fname[:-3], group_path])
         if not fname.endswith('.csv'): fname += '.csv'
         os_path = os.path.join(cls.base_path, h5fname)
@@ -765,26 +689,12 @@ class ClusterTable(object):
             table_seq = h5file.walk_nodes(table_path, classname='Table')
             #   Convert each table to a dataframe, adding any attached labels.
             dfs = [ cls.table_to_df(t, add_labels=True) for t in table_seq ]
-            ########
-            # pdb.set_trace()
-            ########
-            #   TBD: Not here...
-            # mongo_save = False
-            # if db_name:
-            #     try:
-            #         mongo_session = MongoSession(db_name=db_name)
-            #         collection = mongo_session.collection
-            #     except Exception as e:
-            #         LOGGER.error(colored(e ,'red'))
-            #     else:
-            #         mongo_save = True
             new_rows = []
             for df in dfs:
                 for idx, (k, row) in enumerate(df.iterrows()):
                     d = row.to_dict()
                     ##########
                     LOGGER.debug(colored(pformat(d), 'magenta'))
-                    # pdb.set_trace()
                     ##########
                     #   Update the post with new tags
                     labels = [
@@ -794,9 +704,6 @@ class ClusterTable(object):
                     ##########
                     LOGGER.debug(colored(pformat(labels), 'magenta'))
                     ##########
-                    #   TBD: Not here...
-                    # if mongo_save:
-                        # d = ClusterTable.to_mongo(d, session)
                     if labels:
                         for rd in ClusterDataFrame.ravel_label_row(d):
                             rd.update(d)
@@ -806,9 +713,7 @@ class ClusterTable(object):
                         new_rows.append(d)
             new_df = DataFrame(new_rows)
             ############
-            # LOGGER.debug(df)
             LOGGER.debug(colored(new_df, 'magenta'))
-            # pdb.set_trace()
             ############
             df = new_df
             df.to_csv(out_path, index=False)
@@ -887,34 +792,9 @@ class ClusterTable(object):
                     writer.writerow(
                         {'_id': _id, 'labels': u'|'.join(labels) }
                     )
-            # "script": "if (ctx._source.containsKey(\"paymentInfos\")) {ctx._source.paymentInfos += paymentInfo;} else {ctx._source.paymentInfos = [paymentInfo]}"
-            # id_array = list(id_array)
-            # docs = (
-            #     {
-            #         '_id': _id, 'doc': {
-
-            #         }
-            #     },
-            #         for _id in id_array
-            # )
-            # try:
-            #     eshelpers.to_elasticsearch(
-            #         grp, brand, 'promotion', action='update', **kwargs
-            #     )
-            # except Exception as e:
-            #     LOGGER.error(colored(e ,'red'))
-            # else:
 
         def save_to_db(table, labels, db_name=None, db_type=None):
-            ###############
-            # pdb.set_trace()
-            ###############
             is_save = False
-            # if db_name:
-            #     if db_type == 'mongo':
-            #         save_to_mongo(table, labels, db_name)
-            #     elif db_type == 'elasticsearch':
-            #         save_to_elasticsearch(table, labels, db_name)
             id_array = table.col('id')
             #   TBD
             with open("labels_temp_{}.csv".format(datetime.datetime.now().strftime('%Y%m%dT%H%M%S'))) as f:
@@ -929,25 +809,15 @@ class ClusterTable(object):
             prev_labels = get_labels(table)
             #   Get the parent.
             parent = table._v_parent
-            ##########
-            # LOGGER.debug(prev_labels)
-            # pdb.set_trace()
-            ##########
             if prev_labels:
                 #   We've already updated labels for this table.
                 #   Overwrite the old with the new.
                 labels = sorted(list(set(values)))
                 labels = [ l for l in labels if l ]
-                ##########
-                # LOGGER.debug(labels)
-                # pdb.set_trace()
-                ##########
             else:
                 #   No labels have been applied. Add the parent labels to the
                 #   supplied values.
                 labels = get_labels(parent, values)
-            #   TODO:   Decide whether to do this here or in `export`.
-            # save_to_db(parent, labels, db_name)
             #   Update labels for the parent group.
             parent._v_attrs.labels = labels
             labels_str = colored(', '.join(labels), 'yellow')
@@ -957,11 +827,6 @@ class ClusterTable(object):
                 colored(parent._v_pathname, 'cyan'),
             ))
             #   ---------------------------------------------
-            #########
-            # LOGGER.debug(labels)
-            # LOGGER.debug(parent._v_attrs.labels)
-            # pdb.set_trace()
-            #########
             #   Recursively add labels to children of the parent group (including
             #   the current table).
             children = parent._f_walknodes()
@@ -972,14 +837,7 @@ class ClusterTable(object):
                     child_labels = labels
                 else:
                     child_labels = get_labels(child, labels)
-                #   TODO:   Decide whether to do this here or in `export`.
-                # save_to_db(child, child_labels, db_name)
                 child._v_attrs.labels = child_labels
-                #########
-                # LOGGER.debug(child)
-                # LOGGER.debug(child_labels)
-                # pdb.set_trace()
-                #########
                 child_pathname, child_name = child._v_pathname, child._v_name
                 child_path = '/'.join((child_pathname, child_name))
                 child_paths.append(child_pathname)
@@ -1006,12 +864,6 @@ class ClusterTable(object):
         #   -------------------------------------------------------------
         LOGGER.info(colored('\tRemoving node {0}\n'.format(node._v_name), 'red'))
         #   -------------------------------------------------------------
-        # node.remove()
-        ######
-        # LOGGER.debug(node)
-        # LOGGER.debug(type(node))
-        # pdb.set_trace()
-        ######
         node._f_remove(recursive=True, force=True)
 
     @staticmethod
