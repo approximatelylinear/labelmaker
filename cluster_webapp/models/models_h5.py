@@ -28,13 +28,13 @@ from pymongo import MongoClient
 from dateutil.parser import parse as date_parse
 
 #   Custom
-from models_base import (
+from cluster_webapp.models_base import (
     ClusterDataFrame, vec_maybe_date_parse, vec_maybe_join_seq,
     vec_maybe_join_seq_comma, vec_maybe_encode_utf8
 )
 
-from lib.clustering import clusterers
-from lib.text_processing import clean as text_clean
+from cluster_webapp.lib.clustering import clusterers
+from cluster_webapp.lib.text_processing import clean as text_clean
 
 #: The directory containing this script
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))

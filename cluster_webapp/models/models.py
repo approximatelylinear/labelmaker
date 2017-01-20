@@ -31,13 +31,13 @@ from models_base import (
     ClusterDataFrame, vec_maybe_date_parse, vec_maybe_join_seq,
     vec_maybe_join_seq_comma, vec_maybe_encode_utf8, Cluster, ClusterTable
 )
-from models_pm import PMClusterDataFrame
-from models_es import ESClusterDataFrame
-from models_topsy import TopsyClusterDataFrame
-from models_boardreader import BRClusterDataFrame
+from cluster_webapp.models_pm import PMClusterDataFrame
+from cluster_webapp.models_es import ESClusterDataFrame
+from cluster_webapp.models_topsy import TopsyClusterDataFrame
+from cluster_webapp.models_boardreader import BRClusterDataFrame
 
-from lib.clustering import clusterers
-from lib.text_processing import clean as text_clean
+from cluster_webapp.lib.clustering import clusterers
+from cluster_webapp.lib.text_processing import clean as text_clean
 
 #: The directory containing this script
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))

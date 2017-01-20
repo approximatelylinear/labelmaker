@@ -13,8 +13,8 @@ from tornado.options import define, options, parse_command_line
 from werkzeug import secure_filename
 from termcolor import colored
 
-import models
-import models_metadata
+from models import models
+from models import models_metadata
 import conf
 
 LOGGER = logging.getLogger(__name__)

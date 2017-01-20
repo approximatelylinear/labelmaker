@@ -26,7 +26,7 @@ from dateutil.parser import parse as date_parse
 from pymongo import MongoClient
 
 #   Custom
-from models_base import ClusterDataFrame
+from cluster_webapp.models_base import ClusterDataFrame
 
 #: The directory containing this script
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))

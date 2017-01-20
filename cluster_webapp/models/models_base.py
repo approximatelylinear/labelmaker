@@ -28,8 +28,8 @@ from pymongo import MongoClient
 from dateutil.parser import parse as date_parse
 
 #   Custom
-from lib.clustering import clusterers
-from lib.text_processing import clean as text_clean
+from cluster_webapp.lib.clustering import clusterers
+from cluster_webapp.lib.text_processing import clean as text_clean
 
 #: The directory containing this script
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
