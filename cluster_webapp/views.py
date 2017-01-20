@@ -13,7 +13,7 @@ from tornado.options import define, options, parse_command_line
 from werkzeug import secure_filename
 from termcolor import colored
 
-from models import models
+from models import models, utils as model_utils
 from models import models_metadata
 import conf
 
@@ -46,7 +46,8 @@ class ExportHandler(tornado.web.RequestHandler):
             df, fname = models.ClusterTable.export(
                 h5fname = req_data['h5fname'],      #   OS location of h5 db
                 group_path=req_data['group_path'],  #   h5 path
-                mongo_db_name=req_data['db_name'],  #   Mongo database name
+                # TBD: This does nothing right now...
+                db_name=req_data['db_name'],  #   Database name
             )
         except Exception as e:
             LOGGER.exception(e)
@@ -123,7 +124,7 @@ class ClusterHandler(tornado.web.RequestHandler):
         #           size        <int>
         #           tags        <list>
         #           info_feats  <list of dict>
-        clusters = models.ClusterDataFrame.sample(clusters, 1000)
+        clusters = model_utils.sample(clusters, 1000)
         clusters = clusters.drop(['clean_tokens'], axis=1)
         parent_data = [ row.to_dict() for _, row in clusters.iterrows() ]
         for child in children:
@@ -132,9 +133,6 @@ class ClusterHandler(tornado.web.RequestHandler):
             child['data'] = [ row.to_dict() for _, row in sample.iterrows() ]
         result = dict(parent=parent_data, children=children)
         result = json_encode(result)
-        #################
-        # pdb.set_trace()
-        ################
         self.set_header("Content-Type", "application/json")
         self.write(result)
 
@@ -168,12 +166,13 @@ class ClusterDataHandler(tornado.web.RequestHandler):
                 h5fname = req_data['h5fname'],
                 group_path=req_data['group_path'],
                 table_name=req_data['table_name'],
-                db_name=req_data.get('db_name'), # TBD
-                db_type=req_data.get('db_type'), # TBD
+                #   Modify the models.models_h5.ClusterTable.add_labels method
+                # db_name=req_data.get('db_name'), # TBD
+                # db_type=req_data.get('db_type'), # TBD
             )
-            updated['tags'] = result
+            updated['tags'] = result or []
         #   ------------------------------------------------------------
-        LOGGER.info('Updated tags: {0}'.format(colored(pformat(updated), 'magenta')))
+        LOGGER.info('Updated tags: {}'.format(colored(pformat(updated), 'magenta')))
         #   ------------------------------------------------------------
         result = json_encode(updated)
         self.set_header("Content-Type", "application/json")
@@ -301,12 +300,12 @@ define(
 ROUTES = [
     (r"^/?$", MainHandler),
     (r"^/load/?$", RawDataHandler),
-    (r"^/cluster?/$", ClusterDataHandler),
-    (r"^/cluster/(?P<cluster_id>[\w\-\.]+)/$", ClusterDataHandler),
-    (r"^/cluster/cluster/(?P<cluster_id>[\w\-\.]+)/$", ClusterHandler),
-    (r"^/cluster/export/(?P<cluster_id>[\w\-\.]+)/$", ExportHandler),
-    (r"^/cluster/download/(?P<fname>[\w\-\.]+)/$", ExportHandler),
-    (r"^/cluster/remove_row/(?P<cluster_id>[\w\-\.]+)/$", RemoveRowHandler),
+    (r"^/cluster/?$", ClusterDataHandler),
+    (r"^/cluster/(?P<cluster_id>[\w\-\.]+)/?$", ClusterDataHandler),
+    (r"^/cluster/(?P<cluster_id>[\w\-\.]+)/cluster/?$", ClusterHandler),
+    (r"^/cluster/(?P<cluster_id>[\w\-\.]+)/export/?$", ExportHandler),
+    (r"^/cluster/(?P<fname>[\w\-\.]+)/download/?$", ExportHandler),
+    (r"^/cluster/(?P<cluster_id>[\w\-\.]+)/remove_row/?$", RemoveRowHandler),
     #   TODO:
     #       Add classification handler
 

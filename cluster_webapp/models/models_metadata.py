@@ -22,12 +22,11 @@ from termcolor import colored
 
 #   Custom
 from cluster_webapp import conf
+from cluster_webapp.models import utils as model_utils
 
 Base = declarative_base()
 
 def load_fixtures(fname):
-    if not os.path.exists(conf.FIXTURES_DATA_PATH):
-        os.makedirs(conf.FIXTURES_DATA_PATH)
     with open(os.path.join(conf.FIXTURES_DATA_PATH, fname), 'rbU') as f:
         docs = yaml.load_all(f)
         for doc in docs:
@@ -36,21 +35,6 @@ def load_fixtures(fname):
 
 def get_timestamp():
     return datetime.datetime.utcnow()
-
-
-def sql_2_dict(obj):
-    """
-    Converts a sqlalchemy ORM object to a dictionary.
-    """
-    return dict([
-        (k, getattr(obj, k))
-            for k in dir(obj)
-                if k == '_id' or not (
-                    k.startswith('_') or
-                    k in ['metadata'] or
-                    callable(getattr(obj, k))
-                )
-    ])
 
 
 class Dataset(Base):

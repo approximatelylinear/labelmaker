@@ -30,6 +30,7 @@ from dateutil.parser import parse as date_parse
 #   Custom
 from cluster_webapp import conf
 from cluster_webapp.lib.clustering import clusterers
+from cluster_webapp.models import models_h5
 
 #   Custom external
 from textclean.v1 import clean as text_clean
@@ -66,16 +67,12 @@ class ClusterDataFrame(object):
     """
     #: Base directory of raw data.
     raw_base_path = conf.RAW_DATA_PATH
-    if not os.path.exists(raw_base_path): os.makedirs(raw_base_path)
     #: Base directory of normalized data.
     clean_base_path = conf.CLEAN_DATA_PATH
-    if not os.path.exists(clean_base_path): os.makedirs(clean_base_path)
     #: Base directory of output data.
     final_base_path = conf.FINAL_DATA_PATH
-    if not os.path.exists(final_base_path): os.makedirs(final_base_path)
     #: Base directory of metadata.
     meta_base_path = conf.META_DATA_PATH
-    if not os.path.exists(meta_base_path): os.makedirs(meta_base_path)
     #: Default columns to include in data after calling :py:meth:`.load`
     dflt_columns = [
         '_id',
@@ -293,7 +290,7 @@ class ClusterDataFrame(object):
         """
         if '_id' not in df: df['_id'] = xrange(len(df))
         #   Remove duplicates
-        df = df.drop_duplicates(cols=['_id'])
+        df = df.drop_duplicates(subset=['_id'])
         return df
 
     def normalize_dates(self, df):
@@ -373,7 +370,7 @@ class ClusterDataFrame(object):
         )
         if not 'cluster_id' in df: df['cluster_id'] = name
         h5fname = name + '.h5'
-        table = ClusterTable(
+        table = models_h5.ClusterTable(
             df,
             name=name,
             parent_path='/',
@@ -390,7 +387,7 @@ class ClusterDataFrame(object):
                 'size'          : size,
                 'tags'          : tags,
                 'info_feats'    : info_feats,
-                'id'            : ClusterTable.create_id(h5fname, path, name),
+                'id'            : models_h5.ClusterTable.create_id(h5fname, path, name),
             }
                 for sample, path, name, size, tags, info_feats in children
         ]
@@ -410,70 +407,4 @@ class ClusterDataFrame(object):
         ))
         #   ------------------------------------
         df.to_csv(path, **kwargs_csv)
-
-    @staticmethod
-    def sample(df, n=50):
-        """
-        Samples a dataframe
-
-        :param pd.DataFrame df: Dataframe to sample
-        :param int n: Number of items (defaults to 50)
-
-        """
-        size = len(df)
-        if n < size:
-            idxs = random.sample(xrange(size), n)
-            samples= df.iloc[idxs]
-        else:
-            samples = df
-        return samples
-
-    @staticmethod
-    def ravel_labels(df):
-        """
-        (Un)ravels a dataframe: Creates a new row for each token in the column 'labels' for each row.
-
-        :param pd.DataFrame df: Dataframe to unravel.
-
-        :return: The unraveled dataframe
-        :rtype: pd.DataFrame
-
-        """
-        if any(df.label.map(lambda x: isinstance(x, basestring))):
-            df.label = df.label.map(lambda x: x.split(','))
-        rows = []
-        for k, row in df.iterrows():
-            d = row.to_dict()
-            labels = d['label']
-            #   Normalize and de-dup the labels.
-            labels = [t.lower().strip() for t in labels]
-            labels = set(labels)
-            #   Add a new row for each label.
-            for label in labels:
-                new_d = dict(d)
-                new_d['label'] = label
-                rows.append(new_d)
-        new_df = DataFrame(rows)
-        return new_df
-
-    @staticmethod
-    def ravel_label_row(d):
-        """
-        Creates a new row for each label in the data.
-
-        :param dict d: Dictionary representing a DataFrame row.
-
-        :return: Generator of new entries
-        :rtype: Generator
-
-        """
-        labels = d.pop('label', []) or d.pop('labels', [])
-        #   Normalize and de-dup the labels.
-        labels = [t.lower().strip() for t in labels]
-        labels = set(labels)
-        #   Add a new row for each label.
-        for label in labels:
-            new_d = dict(d)
-            new_d['label'] = label
-            yield new_d
 

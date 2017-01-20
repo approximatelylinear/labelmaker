@@ -43,8 +43,6 @@ app.Cluster = Backbone.Model.extend({
 		visible			: true,
 		refresh			: false
 	},
-	// url			: '/cluster',
-	// urlRoot		: '/cluster',
 	getUrl		: function () {
 		return this.collection.url + this.id;
 	},
@@ -90,34 +88,41 @@ app.Cluster = Backbone.Model.extend({
 		var that = this;
 		//	Update child tags.
 		var tag_data = data['tags'];
-		var new_tag_data = {};
-		var children = [];
-		//	Copy the children to a new variable.
-		if (this.children && 'models' in this.children) {
-			_.each(this.children.models, function (c) {children.push(c);});
-		}
-		//	Transform child keys to ids.
-		_.each(_.keys(tag_data), function (k) {
-			var new_k = [that.get('h5fname'), k].join('/').replace(/\//gi, '-');
-			console.log(k + ' --> ' + new_k);
-			new_tag_data[new_k] = tag_data[k];
-		});
-		tag_data = new_tag_data;
-		if (!(this.id in tag_data)) {
-			//	Try to find the tags belonging to this model's group.
-			var group_path = [this.get('h5fname'), this.get('group_path')].join('/').replace(/\//gi, '-');
-			this.set('tags', tag_data[group_path]);
-		}
-		else {
-			this.set('tags', tag_data[this.id]);
-		}
-		while (children.length > 0) {
-			var child = children.pop();
-			//	Refresh the child's tag data.
-			child.set('tags', tag_data[child.id]);
-			//	Add the next batch of children.
-			_.each(child.children, function (c) {children.push(c);});
-		}
+		this.set('tags', tag_data);
+
+		// TBD: Clean up this ambitious mess...
+		// 	The intention, btw, is to update the tags on every child element,
+		//  but that code is pretty complicated for such a task, so there
+		//	must be something else going on there...
+
+		// var new_tag_data = {};
+		// var children = [];
+		// //	Copy the children to a new variable.
+		// if (this.children && 'models' in this.children) {
+		// 	_.each(this.children.models, function (c) {children.push(c);});
+		// }
+		// //	Transform child keys to ids.
+		// _.each(_.keys(tag_data), function (k) {
+		// 	var new_k = [that.get('h5fname'), k].join('/').replace(/\//gi, '-');
+		// 	console.log(k + ' --> ' + new_k);
+		// 	new_tag_data[new_k] = tag_data[k];
+		// });
+		// tag_data = new_tag_data;
+		// if (!(this.id in tag_data)) {
+		// 	//	Try to find the tags belonging to this model's group.
+		// 	var group_path = [this.get('h5fname'), this.get('group_path')].join('/').replace(/\//gi, '-');
+		// 	this.set('tags', tag_data[group_path]);
+		// }
+		// else {
+		// 	this.set('tags', tag_data[this.id]);
+		// }
+		// while (children.length > 0) {
+		// 	var child = children.pop();
+		// 	//	Refresh the child's tag data.
+		// 	child.set('tags', tag_data[child.id]);
+		// 	//	Add the next batch of children.
+		// 	_.each(child.children, function (c) {children.push(c);});
+		// }
 	},
 	removeRow	: function (row_idx) {
 		/*
@@ -175,9 +180,6 @@ app.Cluster = Backbone.Model.extend({
 		var newData = [];
 		if (dataLen > 1) {
 			this.children = new app.ClusterList();
-			///////////////
-			// console.log(data)
-			///////////////
 			_.each(
 				data,
 				function (d) {
@@ -1040,7 +1042,7 @@ app.ClusterView = Backbone.View.extend({
 	},
 	updateTagsOnBlur	: function (evt) {
 		evt.stopPropagation();
-		// this.updateTags(this);
+		this.updateTags(this);
 	},
 	updateTagsOnEnter	: function (evt) {
 		evt.stopPropagation();

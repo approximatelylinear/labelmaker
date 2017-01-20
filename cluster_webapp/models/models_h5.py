@@ -29,17 +29,17 @@ from dateutil.parser import parse as date_parse
 
 #   Custom
 from cluster_webapp import conf
-from cluster_webapp.lib.clustering import clusterers
-from cluster_webapp.models.models_base import ClusterDataFrame
+from cluster_webapp.lib.clustering import conf as conf_clusterer, clusterers
+from cluster_webapp.models import utils as model_utils
 
 #: Logger name
 LOGGER = logging.getLogger(__name__)
 
 
+
+
 class Cluster(object):
     base_path = conf.CLUSTERS_DATA_PATH
-    if not os.path.exists(base_path): os.makedirs(base_path)
-    cluster_doc_dir = clusterers.CLUSTER_DOC_DIR
     cluster_columns = [
         'clean_content',
         'clean_tokens',
@@ -110,7 +110,7 @@ class Cluster(object):
             try:
                 #   If refresh, remove all saved data.
                 clusterer.create_models(df)
-                clusters = clusterer.doc_cluster(df, base_dir=self.base_path)
+                clusters = clusterer.doc_cluster(df)
                 info_feats = self.get_info_features()
                 #   Remove saved data.
                 self.clusterer.delete_dependencies()
@@ -493,7 +493,7 @@ class ClusterTable(object):
             h5file=h5file
         )
         #   Update table tags
-        self.label(cluster_table, tags)
+        self.add_labels(cluster_table, tags)
         total = len(cluster_df)
         new_ids = self.insert_new(cluster_df, cluster_table)
         ids = set(cluster_table.col('id'))
@@ -507,7 +507,7 @@ class ClusterTable(object):
             colored(cluster_table_name, 'red')
         ))
         #   -----------------------------------------
-        sample = ClusterDataFrame.sample(cluster_df)
+        sample = model_utils.sample(cluster_df)
         size = len(cluster_df)
         return sample, cluster_group_path, cluster_table_name, size
 
@@ -616,7 +616,9 @@ class ClusterTable(object):
 
     @classmethod
     def update_labels(cls, labels, h5fname, group_path, table_name):
-        return cls.load(h5fname, group_path, table_name, callback=cls.label, values=labels)
+        return cls.load(
+            h5fname, group_path, table_name,
+            callback=cls.add_labels, values=labels)
 
     @classmethod
     def load(cls, h5fname, group_path, table_name, callback=None, **callback_kwargs):
@@ -637,37 +639,10 @@ class ClusterTable(object):
             if callback is not None:
                 return callback(node, **callback_kwargs)
 
-    def postprocess(fname='pm_cluster.csv'):
-        collection = self.mongo_session.collection
-        path = self.data_path
-        #   Get the clustered data
-        #   Use 'id' as the index.
-        df = pd.read_csv(path)
-        df = df.set_index('id')
-        #   Convert comma-separated label strings to lists.
-        df.label = df.label.fillna('')
-        if any(df.label.map(lambda x: isinstance(x, basestring))):
-            df.label = df.label.map(lambda x: x.split(','))
-            df.label = df.label.map(lambda l: set([t.lower().strip() for t in l]))
-        new_rows = []
-        for idx, (k, row) in enumerate(df.iterrows()):
-            db_post = collection.find_one({'_id': k})
-            d = self.row_to_dict(row, db_post)
-            #   Update the post with new tags
-            labels = [ l for l in list(d['label']) if l ]
-            if labels: self.update_labels(k, labels)
-            for rd in self.ravel_label_row(d):
-                rd.update(d)
-                new_rows.append(rd)
-        new_df = DataFrame(new_rows)
-        if to_csv: self.to_csv(new_df, self.final_base_path, index=False)
-        return new_df
-
     @classmethod
     def export(
             cls, h5fname, group_path, fname=None,
             db_name=None, db_type=None,
-            mongo_session_maker=None,
         ):
         fname = fname or '/'.join([h5fname[:-3], group_path])
         if not fname.endswith('.csv'): fname += '.csv'
@@ -675,9 +650,6 @@ class ClusterTable(object):
         out_fname = fname.strip('/').replace('/', '_')[:-4] + '_labeled.csv'
         out_path = os.path.join(cls.base_path, 'labeled', out_fname)
         with open_file(os_path, mode="r+") as h5file:
-            ########
-            # pdb.set_trace()
-            ########
             table_path = group_path
             table_seq = h5file.walk_nodes(table_path, classname='Table')
             #   Convert each table to a dataframe, adding any attached labels.
@@ -692,15 +664,15 @@ class ClusterTable(object):
                     #   Update the post with new tags
                     labels = [
                         l for l in list(d.pop('labels', '').split('|'))
-                            if len(l) > 1
+                            if len(l) > 0
                     ]
                     ##########
                     LOGGER.debug(colored(pformat(labels), 'magenta'))
                     ##########
                     if labels:
-                        for rd in ClusterDataFrame.ravel_label_row(d):
-                            rd.update(d)
-                            new_rows.append(rd)
+                        for label in labels:
+                            d['label'] = label
+                            new_rows.append(d)
                     else:
                         d['label'] = ''
                         new_rows.append(d)
@@ -713,20 +685,6 @@ class ClusterTable(object):
         return df, out_fname
 
     @classmethod
-    def to_mongo(doc, session):
-        _id = doc.get('id', None)
-        if _id is not None:
-            #   Add some other columns from the database.
-            db_post = session.collection.find_one({'_id': _id})
-            if db_post is not None:
-                doc = session.row_to_dict(doc, db_post)
-                doc['labels'] = list(set(labels) | set(db_post.get('labels', [])))
-                doc['labels'] = [ l for l in doc['labels'] if len(l) > 1 ]
-                session.update_labels(_id, labels)
-        return doc
-
-
-    @classmethod
     def load_and_remove_from_id(cls, _id):
         h5fname, group_path, table_name = cls.parse_id(_id)
         return cls.load(h5fname, group_path, table_name, callback=cls.remove)
@@ -736,11 +694,9 @@ class ClusterTable(object):
         return cls.load(h5fname, group_path, table_name, callback=cls.remove)
 
     @staticmethod
-    def label(table, values=None, db_name=None):
-        if values is None:                      values = []
-        elif not hasattr(values, '__iter__'):   values = [values]
-        values = [ v.strip().lower() for v in values ]
-        def get_labels(node, new_labels=None):
+    def add_labels(table, values=None, db_name=None):
+
+        def _get_labels(node, new_labels=None):
             try:
                 labels = node._v_attrs.labels
             except AttributeError:
@@ -751,7 +707,8 @@ class ClusterTable(object):
             labels = [ l for l in labels if l ]
             return labels
 
-        def save_to_mongo(table, labels, db_name):
+        #   Move these...
+        def _save_to_mongo(table, labels, db_name):
             try:
                 mongo_session = MongoSession(db_name=db_name)
                 collection = mongo_session.collection
@@ -776,7 +733,7 @@ class ClusterTable(object):
                     id_array = id_array[offset:]
                 is_save = True
 
-        def save_to_elasticsearch(table, labels, db_name):
+        def _save_to_elasticsearch(table, labels, db_name):
             id_array = table.col('id')
             #   TBD
             with open("labels_temp_{}.csv".format(datetime.datetime.now().strftime('%Y%m%dT%H%M%S'))) as f:
@@ -786,7 +743,7 @@ class ClusterTable(object):
                         {'_id': _id, 'labels': u'|'.join(labels) }
                     )
 
-        def save_to_db(table, labels, db_name=None, db_type=None):
+        def _save_to_csv(table, labels, db_name=None, db_type=None):
             is_save = False
             id_array = table.col('id')
             #   TBD
@@ -796,10 +753,15 @@ class ClusterTable(object):
                     writer.writerow(
                         {'_id': _id, 'labels': u'|'.join(labels) }
                     )
+
+        if values is None:                      values = []
+        elif not hasattr(values, '__iter__'):   values = [values]
+        values = [ v.strip().lower() for v in values ]
+        #   TBD: Just to keep track of what we add to children.
         result = {}
         if values:
             #   Get previously applied labels.
-            prev_labels = get_labels(table)
+            prev_labels = _get_labels(table)
             #   Get the parent.
             parent = table._v_parent
             if prev_labels:
@@ -810,7 +772,7 @@ class ClusterTable(object):
             else:
                 #   No labels have been applied. Add the parent labels to the
                 #   supplied values.
-                labels = get_labels(parent, values)
+                labels = _get_labels(parent, values)
             #   Update labels for the parent group.
             parent._v_attrs.labels = labels
             labels_str = colored(', '.join(labels), 'yellow')
@@ -829,24 +791,25 @@ class ClusterTable(object):
                 if child == table:
                     child_labels = labels
                 else:
-                    child_labels = get_labels(child, labels)
+                    child_labels = _get_labels(child, labels)
                 child._v_attrs.labels = child_labels
                 child_pathname, child_name = child._v_pathname, child._v_name
                 child_path = '/'.join((child_pathname, child_name))
                 child_paths.append(child_pathname)
                 result[child_pathname] = child_labels
             #   --------------------------------------------
-            LOGGER.info('Added labels {0} to Children\n{1}\n\n'.format(
+            LOGGER.info('Added labels {} to Children\n{}\n\n'.format(
                 labels_str,
                 colored(
-                    '\n'.join(['\t{0}'.format(p) for p in child_paths]),
+                    '\n'.join(['\t{}'.format(p) for p in child_paths]),
                     'cyan'
                 )
             ))
             #   ---------------------------------------------
         elif not hasattr(table.attrs, 'labels'):
             table.attrs.labels = []
-        return result
+        #   TBD: The intention is to eventually update labels for all children if the parent labels change.
+        return values
 
     @staticmethod
     def update_info_feats(table, values):
@@ -875,7 +838,7 @@ class ClusterTable(object):
     @staticmethod
     def sample(table):
         df = ClusterTable.table_to_df(table)
-        samples = ClusterDataFrame.sample(df)
+        samples = model_utils.sample(df)
         return samples
 
     @staticmethod

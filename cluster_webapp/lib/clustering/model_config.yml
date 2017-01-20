@@ -1,0 +1,122 @@
+
+
+models:
+    dictionary: &dictionary
+        name: dictionary
+        wrapper_class:
+            module: 'model_tools.model'
+            func: 'Model'
+        parameters:
+        model_callable:
+            module: 'clustering.models_document'
+            func: GensimDictionary
+        model:
+
+    tfidf_corpus: &tfidf_corpus
+        name: tfidf_corpus
+        wrapper_class:
+            module: 'model_tools.model'
+            func: 'Model'
+        parameters:
+        model_callable:
+            module: 'clustering.models_document'
+            func: GensimTFIDFCorpus
+        model:
+
+    lsi_space: &lsi_space
+        name: lsi_space
+        wrapper_class:
+            module: 'model_tools.model'
+            func: 'Model'
+        parameters:
+        model_callable:
+            module: 'clustering.models_svd'
+            func: GensimLSISpace
+        model:
+            - *tfidf_corpus
+
+    lsi_corpus: &lsi_corpus
+        name: lsi_corpus
+        wrapper_class:
+            module: 'model_tools.model'
+            func: 'Model'
+        parameters:
+        model_callable:
+            module: 'clustering.models_svd'
+            func: GensimLSICorpus
+        model:
+            - *lsi_space
+
+    lsi_similarity: &lsi_similarity
+        name: lsi_similarity
+        wrapper_class:
+            module: 'model_tools.model'
+            func: 'Model'
+        model_callable:
+            module: 'clustering.models_svd'
+            func: GensimSimilarityIndex
+        parameters:
+        model:
+            - *lsi_corpus
+
+
+
+
+    vectorizer: &vectorizer
+        name: vectorizer
+        wrapper_class: Vectorizer
+        model_callable:
+            module: 'sklearn.feature_extraction.text'
+            func: 'TfidfVectorizer'
+        parameters:
+            max_df: .9
+            max_features: 2000000
+            min_df: 2
+            stop_words: null
+            token_pattern: '(?u)\|'
+    svd: &svd
+        name: svd
+        wrapper_class: Model
+        model_callable:
+            module: 'sklearn.decomposition'
+            func: 'TruncatedSVD'
+        parameters:
+            n_components: 50
+    normalizer: &normalizer
+        name: normalizer
+        wrapper_class: Model
+        model_callable:
+            module: 'sklearn.preprocessing.data'
+            func: 'Normalizer'
+        parameters:
+            copy: false
+    lsa: &lsa
+        name: lsa
+        wrapper_class: Pipeliner
+        model_callable:
+        model:
+            - *svd
+            - *normalizer
+    kmeans: &kmeans
+        name: k-means
+        wrapper_class: Clusterer
+        model_callable:
+            module: 'sklearn.cluster'
+            func: 'KMeans'
+        parameters:
+            n_clusters: 25
+            init: 'k-means++'
+            max_iter: 500
+            n_init: 1
+            # n_jobs: 5
+            verbose: true
+    clusterer: &clusterer
+        name: clusterer
+        wrapper_class: Pipeliner
+        model:
+            - *vectorizer
+            - *lsa
+            - *kmeans
+#   Main entrypoint
+model:
+    *clusterer
