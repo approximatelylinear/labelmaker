@@ -26,10 +26,9 @@ pandas
 scikit-learn
 matplotlib
 gensim
-#enchant
 
 #   DB
 pymongo
 blosc # Block-level compression library
-git+https://github.com/PyTables/PyTables.git@v.3.1.1#egg=tables
+tables
 elasticsearch

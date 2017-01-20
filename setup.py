@@ -17,7 +17,7 @@ setup(
         'pymongo',
         'mongoengine',
         'numpy',
-        'pytables',
+        'tables',
         'pandas',
         'termcolor',
         'tornado',
